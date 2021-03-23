@@ -8,7 +8,7 @@ namespace ConsoleApp
         public int Age { get; internal set; }
         public string Gender { get; internal set; }
 
-       
+
         //public Person(string name)
         //{
         //    Name = name;
@@ -22,7 +22,10 @@ namespace ConsoleApp
         //    Age = age;
         //    Gender = DefaultGender;
         //}
+        public Person()
+        {
 
+        }
         public Person(string name, int age, string gender)
         {
             Name = name;
