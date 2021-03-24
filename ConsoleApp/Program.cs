@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ConsoleApp
 {
@@ -10,7 +15,7 @@ namespace ConsoleApp
         const string InputFileName = "logo.png";
         const string EncodedFileName = "logo.txt";
         const string DecodedFileName = "logo_decoded.png";
-        static void Main(string[] args)
+        static  void Main(string[] args)
         {
             {
                 //Project project1 = new Project { Name = "Better UI" };
@@ -48,36 +53,241 @@ namespace ConsoleApp
                 //Console.WriteLine();
             }
             #region Casting and Conversions
-            ConvertFileToBase64();
-            ConvertFileFromBase64();
-            ConvertIntToBinary();
+            //ConvertFileToBase64();
+            //ConvertFileFromBase64();
+            //ConvertIntToBinary();
             //ConvertDateTimeToBinary();
             //ChangeTypeExample();
             //ChangeTypeExampleV2();
             //ChangeTypeExampleV3();
-            ConvertCharacterToNumber();
-            #endregion
+            //ConvertCharacterToNumber();
 
-            object name = "Sarah";
+            //object name = "Sarah";
 
             // Not able to cast to Person, throws and exception
             // Person p = (Person)name;
             // But using as does not throw exception, it returns null if the cast does not work
-            Person p = name as Person;
+            //Person p = name as Person;
 
             // If an attempt to dereference name, a null reference is returned
             // Console.WriteLine(p.Name0;
             // so need to check for null
-            if( p == null)
-            {
-                p = new Person { Name = "Default" };
-            }
+            //if (p == null)
+            //{
+            //    p = new Person { Name = "Default" };
+            //}
+            #endregion
+            #region Runtime Execution Tips
+
+            Greet();
+
+            //DisplaySystemInfo();
+
+            //ChangeCulture();
+
+           // RunReport();
+
+            //string fileContents = await LoadFile("fruit.txt");
+            //Console.WriteLine(fileContents);
+
+            RunExternal();
+
+
+            #endregion  
+
+
 
 
 
 
 
             Console.WriteLine("Press enter to exit");
+
+        }
+
+        private static void RunExternal()
+        {
+            //Console.WriteLine("Opening notepad.exe");
+            //Process.Start("notepad.exe");
+
+            Console.WriteLine("Opening notepad.exe with args");
+            Console.WriteLine("Please enter your favorite dessert");
+
+            string dessert = Console.ReadLine();
+            string dessertFilePath = Path.Combine(Environment.CurrentDirectory, "dessert.txt");
+
+            File.WriteAllText(dessertFilePath, dessert);
+            //Process.Start("notepad.exe", dessertFilePath);
+            ProcessStartInfo notepadStartInfo = new ProcessStartInfo
+            {
+                FileName = "notepad.exe",
+                Arguments = dessertFilePath,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            //Process.Start(notepadStartInfo);
+            Console.WriteLine("Opening cmd.exe");
+            ProcessStartInfo cmdStartInfo = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = "/C DATE /T",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false                     // Redirecting output
+                
+            };
+            Process cmdProcess = Process.Start( cmdStartInfo);
+
+            string dateFromCommandLine = cmdProcess.StandardOutput.ReadToEnd();
+            string error = cmdProcess.StandardError.ReadToEnd();
+
+            Console.WriteLine("Standard output from Process");
+            Console.WriteLine(dateFromCommandLine);
+            Console.WriteLine("Error: ");
+            Console.WriteLine(error);
+
+        }
+        private static async Task<string> LoadFile(string fileName)
+        {
+            const int totalRetryAttemptsAllowed = 10;
+            int retryAttemptsRemaining = totalRetryAttemptsAllowed;
+
+            try
+            {
+                bool isFirstAttempt = retryAttemptsRemaining == totalRetryAttemptsAllowed;
+
+                if (!isFirstAttempt)
+                {
+                    Console.WriteLine("Waiting before trying again...");
+                }
+                Console.WriteLine($"{DateTime.Now.ToShortTimeString()} Opening file '{fileName}'");
+                using (var file = File.OpenText(fileName))
+                {
+                    return await file.ReadToEndAsync();
+                }
+
+            }
+            catch (Exception)
+            {
+
+                retryAttemptsRemaining--;
+            }
+
+            return $"ERROR: Cannot open file '{fileName}'";
+        }
+        private static void RunReport()
+        {
+            //Report report = new Report();
+
+            //Console.WriteLine("Would you like to run the report? Y/N");
+            //string choice = Console.ReadLine();
+
+            //if (choice == "Y")
+            //{
+            //    Console.WriteLine($"Report Name: {report.ReportName}");
+            //    report.Run();
+            //}
+
+
+            // Lazy Instantiation
+            // Report is not created until the report name is accessed
+            Lazy<Report> report = new Lazy<Report>();
+
+            Console.WriteLine("Would you like to run the report? Y/N");
+            string choice = Console.ReadLine();
+
+            if (choice == "Y")
+            {
+                Console.WriteLine($"Report Name: {report.Value.ReportName}");
+                report.Value.Run();
+            }
+
+
+            report = new Lazy<Report>( () => new Report("Sales Report"));
+
+            Console.WriteLine("Would you like to run the report? Y/N");
+            choice = Console.ReadLine();
+
+            if (choice == "Y")
+            {
+                Console.WriteLine($"Report Name: {report.Value.ReportName}");
+                report.Value.Run();
+            }
+
+
+        }
+
+        private static void ChangeCulture()
+        {
+            // Culture names format: languagecode-countryregioncode
+            const string australiaCultureString = "en-AU";
+            const string turkeyCultureString = "tr-TK";
+
+            const double someNumber = 23.45;
+
+            Console.WriteLine("Setting English Language - Australia country/region");
+            CultureInfo australiaCultureInfo = CultureInfo.GetCultureInfo(australiaCultureString);
+            Thread.CurrentThread.CurrentCulture = australiaCultureInfo;
+            Console.WriteLine(someNumber);
+            Console.WriteLine(DateTime.Now);
+
+            Console.WriteLine("Setting Turkish Language - Turkey country/region");
+            CultureInfo turkeyCultureInfo = CultureInfo.GetCultureInfo(turkeyCultureString);
+            Thread.CurrentThread.CurrentCulture = turkeyCultureInfo;
+            Console.WriteLine(someNumber);
+            Console.WriteLine(DateTime.Now);
+
+
+
+
+        }
+
+        private static void DisplaySystemInfo()
+        {
+            IDictionary envVars = Environment.GetEnvironmentVariables();
+            Console.WriteLine(envVars["Path"]);
+
+            Console.WriteLine($"64 bit OS: {Environment.Is64BitOperatingSystem}");
+            Console.WriteLine($"64 bit process; {Environment.Is64BitProcess}");
+            Console.WriteLine($"Number of processor: {Environment.ProcessorCount}");
+            Console.WriteLine($"OS memory page: {Environment.SystemPageSize} bytes");
+
+            string currEnvNewLineString = Environment.NewLine;
+            // "\r\n" non-Unix or "\n" for Unix platforms
+
+            Console.WriteLine($"Current dir: {Environment.CurrentDirectory}");
+            Console.WriteLine($"Desktop dir: {Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)}");
+            Console.WriteLine($"Fonts dir: {Environment.GetFolderPath(Environment.SpecialFolder.Fonts)}");
+            Console.WriteLine($"My Documents dir: {Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}");
+            Console.WriteLine($"Startup dir: {Environment.GetFolderPath(Environment.SpecialFolder.Startup)}");
+
+            string[] drives = Environment.GetLogicalDrives();
+
+            Console.WriteLine($"Drives: {string.Join(" ", drives)}");
+
+            Console.WriteLine($"System dir: {Environment.SystemDirectory} ");
+
+
+
+        }
+
+        private static void Greet()
+        {
+            try
+            {
+                Console.Write(GreetingGenerator.GreetingPrefix);
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine(ex);
+                Console.WriteLine("Please press enter to proceed.");
+                Console.ReadLine();
+            }
+
+            // Danger of static constructor
+            GreetingGenerator generator = new GreetingGenerator();
+            Console.WriteLine(generator.Generate());
 
         }
 
